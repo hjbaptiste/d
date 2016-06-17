@@ -50,7 +50,7 @@ public class FamilyTrashDAOImpl extends BaseDAOImpl {
             familyTrash.setIdFamilyTrash(rs.getInt("id_family_trash"));
             familyTrash.setOriginalRelativePath(rs.getString("original_relative_path"));
             familyTrash.setShareRelativePath(rs.getString("share_relative_path"));
-            familyTrash.setIsDirectory("Y".equals(rs.getString("is_directory")) ? true : false);
+            familyTrash.setIsDirectory("1".equals(rs.getString("is_directory")) ? true : false);
             familyTrash.setDtLastUpdated(rs.getDate("dt_last_update"));
             
             return familyTrash;

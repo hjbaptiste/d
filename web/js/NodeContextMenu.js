@@ -101,12 +101,13 @@ function replaceNodeName(path, name, newName){
 }
 
 function deleteFile(path, childIndex){
+    getEI('c-menu__closeBtn').click();
     if (childIndex.endsWith('_dir')) {
         var index = childIndex.replace('_dir', '');
-        currentNode.directoryChildren = currentNode.directoryChildren.splice(index, 1);
+        currentNode.directoryChildren.splice(index, 1);
     } else {
         var index = childIndex.replace('_file', '');
-        currentNode.fileChildren = currentNode.fileChildren.splice(index, 1);
+        currentNode.fileChildren.splice(index, 1);
     }
 
     var url = 'deleteFile.html';

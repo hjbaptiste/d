@@ -49,7 +49,7 @@ public class UserTrashDAOImpl extends BaseDAOImpl {
             userTrash.setIdUser(rs.getInt("id_user"));
             userTrash.setOriginalRelativePath(rs.getString("original_relative_path"));
             userTrash.setShareRelativePath(rs.getString("share_relative_path"));
-            userTrash.setIsDirectory("Y".equals(rs.getString("is_directory")) ? true : false);
+            userTrash.setIsDirectory("1".equals(rs.getString("is_directory")) ? true : false);
             userTrash.setDtLastUpdated(rs.getDate("dt_last_update"));
             
             return userTrash;

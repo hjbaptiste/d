@@ -4,6 +4,9 @@ package com.homeclouddrive.controller;
 
 import com.homeclouddrive.domain.Node;
 import com.homeclouddrive.domain.User;
+import com.homeclouddrive.exception.BaseException;
+import com.homeclouddrive.service.RenameFileImpl;
+import com.homeclouddrive.service.SendFileToTrashImpl;
 import com.jigy.api.Helpful;
 import java.io.File;
 import java.io.FileFilter;
@@ -19,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
@@ -38,11 +42,17 @@ import org.springframework.web.servlet.ModelAndView;
  */
 @Controller
 public class FileBrowserController {  
+    @Resource
+    private RenameFileImpl renameFile;
+    
+    @Resource
+    private SendFileToTrashImpl sendFileToTrash;
     
     private Node root;
     private List flatList;
     private static Map<String, String[]> fileTypeMap = new HashMap();
     File driveHome = null;
+    File userHomeDirectory = null;
     String context = null;
     static {
         fileTypeMap.put("other", new String[]{"blue", "fa-file"});
@@ -214,24 +224,15 @@ public class FileBrowserController {
         String name = Helpful.getRequestParamStrSafe("name", request);
         String newName = Helpful.getRequestParamStrSafe("newName", request);
         driveHome = new File(Helpful.getProperty(request, "jdbc.properties", "drive.home"));
+        User user = (User) Helpful.getUser(request);
+        userHomeDirectory = new File(driveHome.getAbsolutePath(), user.getIdUser().toString());
         context = Helpful.getProperty(request, "jdbc.properties", "context");
-        String fileLocation = driveHome + File.separator + convertPath(path, context);
-        String newFileLocation = driveHome + File.separator + convertPath(newPath, context);
+        String fileLocation = userHomeDirectory + File.separator + convertPath(path, context);
+        String newFileLocation = userHomeDirectory + File.separator + convertPath(newPath, context);
         
-        // change file name
-        File file = new File(fileLocation);
+        
 
-        // File (or directory) with new name
-        File file2 = new File(newFileLocation);
-
-        if (file2.exists()){
-           throw new java.io.IOException("file exists");
-        }
-
-        // Rename file (or directory)
-        boolean success = file.renameTo(file2);
-
-        if (!success) {
+        if (!renameFile.renameFile(fileLocation, newFileLocation)) {
            // File was not successfully renamed
             throw new java.io.IOException("file not renamed successfully");
         }
@@ -246,19 +247,19 @@ public class FileBrowserController {
      * @throws java.io.IOException
      */
     @RequestMapping(value = "/deleteFile.html")
-    public void deleteFile(HttpServletRequest request, HttpServletResponse response) throws IOException{       
+    public void deleteFile(HttpServletRequest request, HttpServletResponse response) throws IOException, BaseException{       
         String path = Helpful.getRequestParamStrSafe("path", request);
         driveHome = new File(Helpful.getProperty(request, "jdbc.properties", "drive.home"));
         context = Helpful.getProperty(request, "jdbc.properties", "context");
-        String fileLocation = driveHome + File.separator + convertPath(path, context);
         User user = (User) Helpful.getUser(request);
+        userHomeDirectory = new File(driveHome.getAbsolutePath(), user.getIdUser().toString());
+        String fileLocation = userHomeDirectory.getAbsolutePath() + File.separator + convertPath(path, context);
+        
+        // send file to trash
+        sendFileToTrash.sendFileToTrash(userHomeDirectory, new File(fileLocation), driveHome, user.getIdUser(), context);
     }
     
     
-    
-    protected String convertPath(String path, String context){
-        return path.replace(context, "").replace("/resource/", "").replace("/", "\\");
-    }
     
     
     
@@ -273,12 +274,14 @@ public class FileBrowserController {
     public ModelAndView getDirs(HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{       
         driveHome = new File(Helpful.getProperty(request, "jdbc.properties", "drive.home"));
         context = Helpful.getProperty(request, "jdbc.properties", "context");
+        User user = (User) Helpful.getUser(request);
+        userHomeDirectory = new File(driveHome.getAbsolutePath(), user.getIdUser().toString());
         
         StopWatch watch = new StopWatch();
         watch.start();
 
-        root = createNode(driveHome, null);
-        getFirstLevelNodes(driveHome.listFiles(), root);
+        root = createNode(userHomeDirectory, null);
+        getFirstLevelNodes(userHomeDirectory.listFiles(), root);
         
         watch.stop();
         System.out.println("Total execution time only first level nodes: " + watch.getTotalTimeMillis());
@@ -299,14 +302,16 @@ public class FileBrowserController {
     public @ResponseBody List getDirsJson(HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{       
         driveHome = new File(Helpful.getProperty(request, "jdbc.properties", "drive.home"));
         context = Helpful.getProperty(request, "jdbc.properties", "context");
+        User user = (User) Helpful.getUser(request);
+        userHomeDirectory = new File(driveHome.getAbsolutePath(), user.getIdUser().toString());
         List list = new ArrayList();
         flatList = new ArrayList();
         
         StopWatch watch = new StopWatch();
         watch.start();
 
-        root = createNode(driveHome, null);
-        createTree(driveHome.listFiles(), root);
+        root = createNode(userHomeDirectory, null);
+        createTree(userHomeDirectory.listFiles(), root);
         
         watch.stop();
         System.out.println("Total execution time getting all nodes: " + watch.getTotalTimeMillis());
@@ -327,7 +332,7 @@ public class FileBrowserController {
      */
     protected void createTree(File[] files, Node parentNode) throws IOException, ParseException{ // the first file sent to this method should be the home directory
         for(File file : files){
-            if(file.isHidden() || file.getName().endsWith("_deleted")){
+            if (file.isHidden() || file.getName().endsWith("_deleted") || file.getName().endsWith("_share")) {
                 continue;
             }
             Node child = createNode(file, parentNode);
@@ -346,7 +351,7 @@ public class FileBrowserController {
     
     protected void getFirstLevelNodes(File[] files, Node parentNode) throws IOException, ParseException {
         for (File file : files) {
-            if (file.isHidden() || file.getName().endsWith("_deleted")) {
+            if (file.isHidden() || file.getName().endsWith("_deleted") || file.getName().endsWith("_share")) {
                 continue;
             }
 
@@ -367,6 +372,8 @@ public class FileBrowserController {
      * @param file the file to convert into a node
      * @param parentNode the parent node of the node being created
      * @return the newly created node
+     * @throws java.io.IOException
+     * @throws java.text.ParseException
      */
     protected Node createNode(File file, Node parentNode) throws IOException, ParseException{
         // get file attributes
@@ -378,7 +385,7 @@ public class FileBrowserController {
         node.setParent(parentNode);
         node.setName(file.getName());
         node.setExtension(getFileExtension(node.getName())); 
-        node.setPath(file.getAbsolutePath().replace(driveHome.getAbsolutePath(), context + "/resource").replace("\\", "/"));
+        node.setPath(file.getAbsolutePath().replace(userHomeDirectory.getAbsolutePath(), context + "/resource").replace("\\", "/"));
         
         
         // set file type and file type icon
@@ -447,6 +454,18 @@ public class FileBrowserController {
         public boolean accept(File file) {
             return !file.isHidden() && !file.isDirectory() && !file.getAbsolutePath().endsWith("_deleted");
         }
+    }
+    
+    
+    /**
+     * This method converts a download url to the relative location
+     * of the file on disk to the user's home directory
+     * @param path the download url
+     * @param context the context of the application (see context property of jdbc.properties file)
+     * @return the absolute
+     */
+    protected String convertPath(String path, String context){
+        return path.replace(context, "").replace("/resource/", "").replace("/", "\\");
     }
     
 }
