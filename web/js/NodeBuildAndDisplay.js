@@ -50,7 +50,7 @@ function buildAndDisplay(directoryChildren, fileChildren, isSearch) {
                     + '<div class="btn-group col-xs-12" style="margin:0px; padding: 0px;">'
                     + '<button type="button" onclick="goIn(\'' + idAnchor + '\')" class="btn btn-primary col-xs-9" style="height: 42px; text-align: left">'
                     + '<i class="fa fa-folder" style="float: left; position: relative; top: 3px; padding-right: 15px"></i>'
-                    + '<span id="' + nameAnchor + '">' + paraphrase(child.name, 8, 4) + '</span>'
+                    + '<span id="' + nameAnchor + '">' + paraphrase(child.name, 14, 7) + '</span>'
                     + '</button><button type="button" class="btn btn-primary col-xs-3 openContext" onclick="openContextMenu(event, \'' + i + '_dir\')" style="height: 42px"><i class="fa fa-ellipsis-v"></i></button></div></div>';
         }
 
@@ -67,7 +67,7 @@ function buildAndDisplay(directoryChildren, fileChildren, isSearch) {
             html = html + '<div class="col-xs-6" style="padding-left:3px; padding-right:3px; padding-bottom:5px; margin-bottom: 0px"><div class="btn-group col-xs-12" style="margin:0px; padding: 0px;">'
                     + '<button type="button" onclick="getEI(\'' + idAnchor + '\').click();" class="btn btn-primary col-xs-9" style="height: 42px; text-align: left; border-color: rgba(0,0,0,.1); background-color: rgba(0,0,0,.2)">'
                     + '<i class="fa ' + child.extensionIcon[1] + '" style="color: ' + child.extensionIcon[0] + '; float: left; position: relative; top: 3px; padding-right: 15px"></i>'
-                    + '<span id="' + nameAnchor + '">' + paraphrase(child.name, 8, 4) + '</span>'
+                    + '<span id="' + nameAnchor + '">' + paraphrase(child.name, 13, 7) + '</span>'
                     + '</button>'
                     + '<button type="button" class="btn btn-primary col-xs-3 openContext" onclick="openContextMenu(event, \'' + i + '_file\')" style="height: 42px; border-color: rgba(0,0,0,.1); background-color: rgba(0,0,0,0)"><i class="fa fa-ellipsis-v" style="color: rgba(0,0,0,.6)"></i></button>'
                     + '<a id="' + idAnchor + '" href="' + child.path + '" download style="visibility: hidden; height: 0px; width: 0px;"></a></div></div>';
@@ -106,7 +106,7 @@ function buildAndDisplayList(directoryChildren, fileChildren, isSearch) {
                     + '<div class="btn-group col-xs-12" style="margin:0px; padding: 0px;">'
                     + '<button type="button" onclick="goIn(\'' + idAnchor + '\')" class="btn btn-primary col-xs-9" style="height: 55px; text-align: left">'
                     + '<i class="fa fa-folder" style="float: left; position: relative; top: 3px; padding-right: 15px"></i>'
-                    + '<span id="' + nameAnchor + '">' + paraphrase(child.name, 16, 8) + '</span>'
+                    + '<span id="' + nameAnchor + '">' + paraphrase(child.name, 27, 21) + '</span>'
                     + '</button><button type="button" class="btn btn-primary col-xs-3 openContext" onclick="openContextMenu(event, \'' + i + '_dir\')" style="height: 55px"><i class="fa fa-ellipsis-v"></i></button></div></div>';
         }
 
@@ -122,7 +122,7 @@ function buildAndDisplayList(directoryChildren, fileChildren, isSearch) {
             html = html + '<div class="col-xs-12" style="padding-left:3px; padding-right:3px; padding-bottom:2px; margin-bottom: 0px"><div class="btn-group col-xs-12" style="margin:0px; padding: 0px;">'
                     + '<button type="button" onclick="getEI(\'' + idAnchor + '\').click();" class="btn btn-primary col-xs-9" style="height: 55px; text-align: left; border-color: rgba(0,0,0,.1); background-color: rgba(0,0,0,.2)">'
                     + '<i class="fa ' + child.extensionIcon[1] + '" style="color: ' + child.extensionIcon[0] + '; float: left; position: relative; top: 3px; padding-right: 15px"></i>'
-                    + '<span id="' + nameAnchor + '">' + paraphrase(child.name, 16, 21) + '</span>'
+                    + '<span id="' + nameAnchor + '">' + paraphrase(child.name, 27, 21) + '</span>'
                     + '</button>'
                     + '<button type="button" class="btn btn-primary col-xs-3 openContext" onclick="openContextMenu(event, \'' + i + '_file\')" style="height: 55px; border-color: rgba(0,0,0,.1); background-color: rgba(0,0,0,0)"><i class="fa fa-ellipsis-v" style="color: rgba(0,0,0,.6)"></i></button>'
                     + '<a id="' + idAnchor + '" href="' + child.path + '" download style="visibility: hidden; height: 0px; width: 0px;"></a></div></div>';
@@ -148,7 +148,7 @@ function buildAndDisplayList(directoryChildren, fileChildren, isSearch) {
 
 function paraphrase(name, maxLength, cutOff) {
     if (name && name.length > maxLength) {
-        return name.substring(0, cutOff) + '...' + name.substring(name.length - 5, name.length);
+        return name.substring(0, cutOff) + '...' + name.substring(name.length - 8, name.length);
     }
 
     return name;

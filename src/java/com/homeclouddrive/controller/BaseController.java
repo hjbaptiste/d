@@ -81,8 +81,8 @@ public class BaseController {
      * @return the shortened name
      */
     public static String paraphrase(String name){
-            if(name != null && name.length() > 10){
-                return name.substring(0, 8) + "..." + name.substring(name.length() - 5, name.length());
+            if(name != null && name.length() > 14){
+                return name.substring(0, 8) + "..." + name.substring(name.length() - 8, name.length());
             }
             
             return name;

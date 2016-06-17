@@ -2,6 +2,7 @@
 package com.homeclouddrive.servlet;
 
 
+import com.homeclouddrive.domain.User;
 import com.jigy.api.Helpful;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -14,8 +15,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.springframework.context.ApplicationContext;
-import org.springframework.web.context.support.WebApplicationContextUtils;
 
 /**
  *
@@ -67,7 +66,8 @@ public class ResourceServlet extends HttpServlet {
         }
 
         // Decode the file name (might contain spaces and so on) and prepare file object.
-        File image = new File(imagePath, URLDecoder.decode(requestedImage, "UTF-8"));
+        User user = (User) Helpful.getUser(request);
+        File image = new File(imagePath + File.separator + user.getIdUser(), URLDecoder.decode(requestedImage, "UTF-8"));
 
         // Check if file actually exists in filesystem.
         if (!image.exists()) {

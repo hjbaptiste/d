@@ -1,6 +1,6 @@
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
-<div class="footer">
+<!-- div class="footer">
     <p id="copyrightText" class="center-text">Copyright 2015. All rights reserved. <a href="https://www.getjigy.com" target="_blank" onmousedown="this.style.color=purple" onmouseup="this.style.color=#5893DD"><span id="poweredBy">Powered by Jigy</span></a></p>
     <div class="footer-icons">
         <a target="_blank" href="https://www.facebook.com/people/Ideal-Logic/100010075840873" class="scale-hover facebook-color social-ball"><i class="fa fa-facebook float-icon-light"></i></a>
@@ -9,7 +9,7 @@
         <a href="#" class="scale-hover back-to-top bg-green-dark social-ball"><i class="fa fa-angle-up float-icon-light"></i></a>
         <a href="#" class="scale-hover show-share-bottom bg-magenta-dark social-ball"><i class="fa fa-retweet float-icon-light"></i></a>
     </div>
-</div>
+</div -->
 
 
 
