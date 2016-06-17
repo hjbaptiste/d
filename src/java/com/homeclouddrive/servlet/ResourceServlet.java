@@ -69,7 +69,7 @@ public class ResourceServlet extends HttpServlet {
         }
 
         // Decode the file name (might contain spaces and so on) and prepare file object.
-        String decodedPath = URLDecoder.decode(requestedImage, "UTF-8");
+        String decodedPath = URLDecoder.decode(requestedImage, "UTF-8").replace("..\\", "");
         String url = request.getRequestURL().toString();
         File image;
         if(url.startsWith(context + "/resource/Share/") || url.startsWith(context + "/resource/Family/")){
