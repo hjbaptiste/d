@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset
+      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+<!-- site powered by www.getjigy.com -->
+
+<url>
+  <loc>http://go.ideallogicgroup.com/go/index.html</loc>
+</url>
+<url>
+  <loc>http://go.ideallogicgroup.com/go/displayHowItWorks.html</loc>
+</url>
+<url>
+  <loc>http://go.ideallogicgroup.com/go/displayTermsOfUse.html</loc>
+</url>
+<url>
+  <loc>http://go.ideallogicgroup.com/go/displayPrivacyPolicy.html</loc>
+</url>
+<url>
+  <loc>http://go.ideallogicgroup.com/displayPrivacyPolicy.html</loc>
+</url>
+<url>
+  <loc>http://go.ideallogicgroup.com/index.html</loc>
+</url>
+<url>
+  <loc>http://go.ideallogicgroup.com/displayHowItWorks.html</loc>
+</url>
+<url>
+  <loc>http://go.ideallogicgroup.com/displayTermsOfUse.html</loc>
+</url>
+</urlset>
