@@ -30,6 +30,7 @@ public class ResourceServlet extends HttpServlet {
     // Properties ---------------------------------------------------------------------------------
 
     private String imagePath;
+    private String context;
 
     // Actions ------------------------------------------------------------------------------------
 
@@ -37,6 +38,7 @@ public class ResourceServlet extends HttpServlet {
 
         // Define base path somehow. You can define it as init-param of the servlet.
         this.imagePath = null;
+        this.context = null;
 
     }
 
@@ -53,6 +55,7 @@ public class ResourceServlet extends HttpServlet {
         
         // set the base image path
         this.imagePath = Helpful.getProperty(request, "jdbc.properties", "drive.home");
+        this.context = Helpful.getProperty(request, "jdbc.properties", "context");
         
         // Get requested image by path info.
         String requestedImage = URLDecoder.decode(request.getPathInfo()); 
@@ -66,8 +69,16 @@ public class ResourceServlet extends HttpServlet {
         }
 
         // Decode the file name (might contain spaces and so on) and prepare file object.
-        User user = (User) Helpful.getUser(request);
-        File image = new File(imagePath + File.separator + user.getIdUser(), URLDecoder.decode(requestedImage, "UTF-8"));
+        String decodedPath = URLDecoder.decode(requestedImage, "UTF-8");
+        String url = request.getRequestURL().toString();
+        File image;
+        if(url.startsWith(context + "/resource/Share/") || url.startsWith(context + "/resource/Family/")){
+            image = new File(imagePath, decodedPath);
+        } else {
+            User user = (User) Helpful.getUser(request);
+            image = new File(imagePath + File.separator + user.getIdUser(), decodedPath);
+        }
+
 
         // Check if file actually exists in filesystem.
         if (!image.exists()) {

@@ -8,16 +8,27 @@ function openContextMenu(e, childIndex) {
 function buildContextMenu(childIndex){
     if (currentNode) {        
         var selectedNode;
-        if (childIndex.endsWith('_dir')) {
-            selectedNode = currentNode.directoryChildren[childIndex.replace('_dir', '')];
+        var shareOrInfoHtml;
+        if (childIndex.endsWith('_file')) {
+            selectedNode = currentNode.fileChildren[childIndex.replace('_file', '')];
             var shareFileInsert = "javascript: shareFile('" + selectedNode.path + "')";
             var shareableLinkInsert = "javascript: getShareableLink('" + selectedNode.path + "')";
-            $("#contextMenuShareFile").attr("href", shareFileInsert);
-            $("#contextMenuShareableLink").attr("href", shareableLinkInsert);
+            shareOrInfoHtml = '<a id="contextMenuShareFile" href="' + shareFileInsert +'" class="menuItem"><div class="col-xs-2">'
+                + '<i class="fa fa-user-plus" style="text-align: left; line-height: 40px; color: rgba(0,0,0,.6)"></i></div>'
+                + '<div class="col-xs-10" style="text-align: left; line-height: 40px; color: rgba(0,0,0,.6)">Share File</div></a>'
+                + '<a id="contextMenuShareableLink" href="' + shareableLinkInsert + '" class="menuItem">'
+                + '<div class="col-xs-2"><i class="fa fa-link" style="text-align: left; line-height: 40px; color: rgba(0,0,0,.6)"></i>'
+                + '</div><div class="col-xs-10" style="text-align: left; line-height: 40px; color: rgba(0,0,0,.6)">Get Shareable Link</div></a>';
         } else {
-            selectedNode = currentNode.fileChildren[childIndex.replace('_file', '')];
+            selectedNode = currentNode.directoryChildren[childIndex.replace('_dir', '')];
+            shareOrInfoHtml = '<div class="col-xs-4" style="padding-left: 25px; padding-right: 0px; margin-right: 0px; text-align: left; font-weight: 500; line-height: 40px; color: rgba(0,0,0,.6)">'
+                + 'Date Created:</div><div class="col-xs-8" style="padding-left: 0px; margin-left: 0px; text-align: left; line-height: 40px; color: rgba(0,0,0,.6)">'
+                + selectedNode.dtCreated + '</div><div class="col-xs-4" style="padding-left: 25px; padding-right: 0px; margin-right: 0px; text-align: left; font-weight: 500; line-height: 40px; color: rgba(0,0,0,.6)">'
+                + 'Date Modified:</div><div class="col-xs-8" style="padding-left: 0px; margin-left: 0; text-align: left; line-height: 40px; color: rgba(0,0,0,.6)">'
+                + selectedNode.lastModified + '</div>';            
         }
         
+        insertHtml('contextMenuShareOrInfo', shareOrInfoHtml);
         var moveInsert = "javascript: move('" + selectedNode.path + "')";
         var renameInsert = "javascript: openRenameModal('" + selectedNode.path + "', '" + childIndex + "', '" + selectedNode.name + "')";
         var deleteFileInsert = "javascript: deleteFile('" + selectedNode.path + "', '" + childIndex + "')";
@@ -30,11 +41,39 @@ function buildContextMenu(childIndex){
 
 
 function shareFile(path){
-    alert('share file: ' + path);
+    var url = 'shareFile.html';
+    var params = {path: path};
+    var callback = function(jsonReturnObj){
+        if(jsonReturnObj.isError){
+            // do something
+        } else {
+            getEI('c-menu__closeBtn').click();
+            var shareableLink = jsonReturnObj.successMessage;
+            var href = "mailto:email@address.com?subject=Check out this link!&body=Here's the link: " + shareableLink;
+            $("#hdnShareLink").attr("href", href); 
+            getEI('hdnShareLink').click();
+        }
+    };
+    
+    send(url, params, callback);
 }
 
 function getShareableLink(path){
-    alert('get share link for file: ' + path);
+    var url = 'shareFile.html';
+    var params = {path: path};
+    var callback = function(jsonReturnObj){
+        if(jsonReturnObj.isError){
+            // do something
+        } else {
+            var shareableLink = jsonReturnObj.successMessage;
+            getEI('c-menu__closeBtn').click();
+            insertHtml('copyShareLink', shareableLink);
+            getEI('displayCopyShareLinkBtn').click();
+            highlight(getEI('copyShareLink'));
+        }
+    };
+    
+    send(url, params, callback);
 }
 
 var fileToMove;
@@ -59,8 +98,8 @@ function clickRenameSubmit(){
 }
 
 
-function highlight(renameField){
-    setTimeout(function(){renameField.select(); renameField.focus();}, 400);
+function highlight(elem){
+    setTimeout(function(){elem.select(); elem.focus();}, 400);
 }
 
 function rename(path, childIndex, name){

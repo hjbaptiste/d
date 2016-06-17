@@ -648,6 +648,16 @@ body.has-active-menu {
 .c-menu--push-bottom.is-active {
   transform: translateY(-160px);
 }
+
+#copyShareLink {
+    border: none;
+    overflow: auto;
+    outline: none;
+
+    -webkit-box-shadow: none;
+    -moz-box-shadow: none;
+    box-shadow: none;
+}
     </style>
 </head>
 
@@ -743,19 +753,15 @@ body.has-active-menu {
                     </div>
                     <div id="contextMenuFolderName" class="col-xs-10" style="text-align: left; font-weight: 600; color: rgba(0,0,0,.6)"></div>
                 </div>
-                <div class="col-xs-12" style="height: 80px; border-bottom: solid 1px rgba(0,0,0,.1)">
-                    <a id="contextMenuShareFile" href="#" class="menuItem">
-                        <div class="col-xs-2">
-                            <i class="fa fa-user-plus" style="text-align: left; line-height: 40px; color: rgba(0,0,0,.6)"></i>
-                        </div>
-                        <div class="col-xs-10" style="text-align: left; line-height: 40px; color: rgba(0,0,0,.6)">Share File</div>
-                    </a>
-                    <a id="contextMenuShareableLink" href="#" class="menuItem">
-                        <div class="col-xs-2">
-                            <i class="fa fa-link" style="text-align: left; line-height: 40px; color: rgba(0,0,0,.6)"></i>
-                        </div>
-                        <div class="col-xs-10" style="text-align: left; line-height: 40px; color: rgba(0,0,0,.6)">Get Shareable Link</div>
-                    </a>
+                <div id="contextMenuShareOrInfo" class="col-xs-12" style="height: 80px; border-bottom: solid 1px rgba(0,0,0,.1)">
+                    <div class="col-xs-4" style="padding-left: 25px; padding-right: 0px; margin-right: 0px; text-align: left; font-weight: 500; line-height: 40px; color: rgba(0,0,0,.6)">
+                        Date Created:
+                    </div>
+                    <div class="col-xs-8" style="padding-left: 0px; margin-left: 0px; text-align: left; line-height: 40px; color: rgba(0,0,0,.6)">Jun 7th 2016 12:00am</div>
+                    <div class="col-xs-4" style="padding-left: 25px; padding-right: 0px; margin-right: 0px; text-align: left; font-weight: 500; line-height: 40px; color: rgba(0,0,0,.6)">
+                        Date Modified:
+                    </div>
+                    <div class="col-xs-8" style="padding-left: 0px; margin-left: 0; text-align: left; line-height: 40px; color: rgba(0,0,0,.6)">Jun 7th 2016 12:00am</div>
                 </div>
                 <div class="col-xs-12" style="height: 120px;">
                     <a id="contextMenuMove" href="#" class="menuItem">
@@ -820,6 +826,31 @@ body.has-active-menu {
                     </div>
                     <div class="modal-footer">
                         <button id="renameSubmitBtn" type="button" class="btn btn-info btn-large" data-dismiss="modal">Submit</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <!-- end rename modal -->
+        
+        
+        <!-- copy shareable link modal -->
+        <a id="hdnShareLink" href="#" style="height: 0px; width: 0px; text-decoration: none;"></a>
+        <button id="displayCopyShareLinkBtn" type="button" style="height: 0px; width: 0px" data-toggle="modal" data-target="#shareLinkModal"></button>
+        <div class="modal fade" id="shareLinkModal" role="dialog">
+            <div class="modal-dialog modal-sm">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Copy Shareable Link</h4>
+                    </div>
+                    <div class="modal-body">
+                        <textarea id="copyShareLink" type="text" cols="40" rows="5" style="font-size: 15px;"></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="doneCopyingBtn" type="button" class="btn btn-info btn-large" data-dismiss="modal">Done</button>
                     </div>
                 </div>
 

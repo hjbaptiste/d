@@ -5,8 +5,10 @@ package com.homeclouddrive.controller;
 import com.homeclouddrive.domain.Node;
 import com.homeclouddrive.domain.User;
 import com.homeclouddrive.exception.BaseException;
+import com.homeclouddrive.json.JsonReturnObj;
 import com.homeclouddrive.service.RenameFileImpl;
 import com.homeclouddrive.service.SendFileToTrashImpl;
+import com.homeclouddrive.service.ShareFileImpl;
 import com.jigy.api.Helpful;
 import java.io.File;
 import java.io.FileFilter;
@@ -16,6 +18,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributeView;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.text.DateFormatSymbols;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,6 +28,7 @@ import java.util.Map;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -47,6 +51,9 @@ public class FileBrowserController {
     
     @Resource
     private SendFileToTrashImpl sendFileToTrash;
+    
+    @Resource
+    private ShareFileImpl shareFile;
     
     private Node root;
     private List flatList;
@@ -245,6 +252,7 @@ public class FileBrowserController {
      * @param request the request object
      * @param response the response object
      * @throws java.io.IOException
+     * @throws com.homeclouddrive.exception.BaseException
      */
     @RequestMapping(value = "/deleteFile.html")
     public void deleteFile(HttpServletRequest request, HttpServletResponse response) throws IOException, BaseException{       
@@ -260,6 +268,57 @@ public class FileBrowserController {
     }
     
     
+    
+    /**
+     * This method creates a shareable version of a file and returns
+     * the shareable link
+     * @param request the request object
+     * @param response the response object
+     * @return the shareable link
+     * @throws java.io.IOException
+     */
+    @RequestMapping(value = "/shareFile.html")
+    public @ResponseBody JsonReturnObj shareFile(HttpServletRequest request, HttpServletResponse response) throws IOException, BaseException{       
+        JsonReturnObj jsonReturnObj = new JsonReturnObj();
+        String path = Helpful.getRequestParamStrSafe("path", request);
+        driveHome = new File(Helpful.getProperty(request, "jdbc.properties", "drive.home"));
+        context = Helpful.getProperty(request, "jdbc.properties", "context");
+        User user = (User) Helpful.getUser(request);
+        userHomeDirectory = new File(driveHome.getAbsolutePath(), user.getIdUser().toString());
+        String fileLocation = userHomeDirectory.getAbsolutePath() + File.separator + convertPath(path, context);
+        File shareDirectory = new File(driveHome, "Share");
+        String shareableUrl;
+        
+        // check to see if file has already been shared
+        File sharedFile = new File(fileLocation + "_share");
+        if(sharedFile.exists()){
+            shareableUrl = FileUtils.readFileToString(sharedFile);
+            
+            if(!Helpful.isEmpty(shareableUrl)){
+                jsonReturnObj.setIsError(false);
+                jsonReturnObj.setSuccessMessage(shareableUrl);
+            } else {
+                jsonReturnObj.setIsError(true);
+                jsonReturnObj.setErrorMessage("Error Sharing File");
+            }
+        } else {
+            // share file
+            shareableUrl = shareFile.shareFile(new File(fileLocation), shareDirectory, driveHome, context);
+
+            if(shareableUrl != null){
+                jsonReturnObj.setIsError(false);
+                jsonReturnObj.setSuccessMessage(shareableUrl);
+            } else {
+                jsonReturnObj.setIsError(true);
+                jsonReturnObj.setErrorMessage("Error Sharing File");
+            }
+        }
+        
+        
+        
+        
+        return jsonReturnObj;
+    }
     
     
     
@@ -406,8 +465,8 @@ public class FileBrowserController {
         // get creation and modification dates        
         String[] lastModified = cleanDate(view.lastAccessTime().toString());
         String[] dtCreated = cleanDate(view.creationTime().toString());
-        node.setLastModified(lastModified[0] + " " + lastModified[1]);
-        node.setDtCreated(dtCreated[0] + " " + dtCreated[1]);
+        node.setLastModified(lastModified[0] + "  at  " + lastModified[1]);
+        node.setDtCreated(dtCreated[0] + "  at  " + dtCreated[1]);
         
         return node;
     }
@@ -420,7 +479,13 @@ public class FileBrowserController {
         
         String[] dates = date.split("\\.")[0].split("T");
         String[] unformmattedDate = dates[0].split("-");
-        return new String[]{unformmattedDate[1] + "-" + unformmattedDate[2] + "-" + unformmattedDate[0], dates[1]};
+        String monthStr = getMonth(Integer.parseInt(unformmattedDate[1]));
+        return new String[]{monthStr + " " + unformmattedDate[2] + ", " + unformmattedDate[0], dates[1]};
+    }
+    
+    
+    public String getMonth(int month) {
+        return new DateFormatSymbols().getMonths()[month - 1];
     }
 
     
