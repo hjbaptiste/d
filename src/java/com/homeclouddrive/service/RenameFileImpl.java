@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Date;
 import javax.annotation.Resource;
+import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,16 +36,30 @@ public class RenameFileImpl {
         
        // change file name
         File file = new File(pathOfFileToRename);
+        if(file.exists()){
+            // File (or directory) with new name
+            File file2 = new File(pathOfNewName);
 
-        // File (or directory) with new name
-        File file2 = new File(pathOfNewName);
+            if (file2.exists()){
+               throw new java.io.IOException("File already exists");
+            }
 
-        if (file2.exists()){
-           throw new java.io.IOException("file exists");
+            if(!file.isDirectory()){
+                // Rename file
+                return file.renameTo(file2);
+            } else {
+                // rename directory
+                FileUtils.copyDirectory(file, file2, true);
+                
+                if (file2.exists()){
+                    FileUtils.deleteDirectory(file);
+                    return true;
+                }
+                return false;
+            }            
         }
 
-        // Rename file (or directory)
-        return file.renameTo(file2);
+        return false;
     }
     
 }

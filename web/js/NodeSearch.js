@@ -30,7 +30,10 @@ function filterSearchResults(results, searchTerm) {
     if (results && results.length > 0) {
         for (var i = 0; i < results.length; i++) {
             var node = results[i];
-            if (node.name.indexOf(searchTerm) > -1 || node.extension.indexOf(searchTerm) > -1) {
+            var name = node.name.toLowerCase();
+            var extension = node.extension.toLowerCase();
+            searchTerm = searchTerm.toLowerCase();
+            if (name.indexOf(searchTerm) > -1 || extension.indexOf(searchTerm) > -1) {
                 if(jQuery.inArray(node.path, dupeList) == -1){
                     if (node.isDirectory) {
                         filteredDirectoryResults.push(node);
