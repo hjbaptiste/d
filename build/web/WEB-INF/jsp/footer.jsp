@@ -26,6 +26,7 @@
 <script type="text/javascript" src="js/NodeSearch.js"></script>
 <script type="text/javascript" src="js/Menu.js"></script>
 <script type="text/javascript" src="js/NodeContextMenu.js"></script>
+<script type="text/javascript" src="js/NodeMove.js"></script>
 <script>
 setActive();
 Waves.attach('.flat-icon', ['waves-circle']);

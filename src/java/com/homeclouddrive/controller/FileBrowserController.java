@@ -6,9 +6,12 @@ import com.homeclouddrive.domain.Node;
 import com.homeclouddrive.domain.User;
 import com.homeclouddrive.exception.BaseException;
 import com.homeclouddrive.json.JsonReturnObj;
+import com.homeclouddrive.service.CreateFileInFolderImpl;
+import com.homeclouddrive.service.MoveFileOrFolderImpl;
 import com.homeclouddrive.service.RenameFileImpl;
 import com.homeclouddrive.service.SendFileToTrashImpl;
 import com.homeclouddrive.service.ShareFileImpl;
+import com.homeclouddrive.service.UploadFilesToFolderImpl;
 import com.jigy.api.Helpful;
 import java.io.File;
 import java.io.FileFilter;
@@ -21,10 +24,12 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.text.DateFormatSymbols;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -33,6 +38,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.StopWatch;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.ModelAndView;
 
 
@@ -55,75 +62,64 @@ public class FileBrowserController {
     @Resource
     private ShareFileImpl shareFile;
     
+    @Resource
+    private MoveFileOrFolderImpl moveFileOrFolder;
+    
+    @Resource
+    private UploadFilesToFolderImpl uploadFilesToFolder;
+    
+    @Resource
+    private CreateFileInFolderImpl createFileInFolder;
+    
     private Node root;
-    private List flatList;
-    private static Map<String, String[]> fileTypeMap = new HashMap();
+    private List flatList;    
+    private Map<String, String[]> fileTypeMap = new HashMap();
     File driveHome = null;
     File userHomeDirectory = null;
     String context = null;
-    static {
-        fileTypeMap.put("other", new String[]{"blue", "fa-file"});
-        fileTypeMap.put("xlsx", new String[]{"green", "fa-file-excel-o"});
-        fileTypeMap.put("xlsm", new String[]{"green", "fa-file-excel-o"});
-        fileTypeMap.put("xlsb", new String[]{"green", "fa-file-excel-o"});
-        fileTypeMap.put("xltx", new String[]{"green", "fa-file-excel-o"});
-        fileTypeMap.put("xltm", new String[]{"green", "fa-file-excel-o"});
-        fileTypeMap.put("xls", new String[]{"green", "fa-file-excel-o"});
-        fileTypeMap.put("xlt", new String[]{"green", "fa-file-excel-o"});
-        fileTypeMap.put("xla", new String[]{"green", "fa-file-excel-o"});
-        fileTypeMap.put("xlw", new String[]{"green", "fa-file-excel-o"});
-        fileTypeMap.put("pdf", new String[]{"red", "fa-file-pdf-o"});
-        fileTypeMap.put("mp3", new String[]{"red", "fa-file-sound-o"});
-        fileTypeMap.put("wav", new String[]{"red", "fa-file-sound-o"});
-        fileTypeMap.put("aaf", new String[]{"red", "fa-file-sound-o"});
-        fileTypeMap.put("aiff", new String[]{"red", "fa-file-sound-o"});
-        fileTypeMap.put("flac", new String[]{"red", "fa-file-sound-o"});
-        fileTypeMap.put("wma", new String[]{"red", "fa-file-sound-o"});
-        fileTypeMap.put("m4a", new String[]{"red", "fa-file-sound-o"});
-        fileTypeMap.put("m4p", new String[]{"red", "fa-file-sound-o"});
-        fileTypeMap.put("m4b", new String[]{"red", "fa-file-sound-o"});
-        fileTypeMap.put("m4c", new String[]{"red", "fa-file-sound-o"});
-        fileTypeMap.put("raw", new String[]{"red", "fa-file-sound-o"});
-        fileTypeMap.put("doc", new String[]{"blue", "fa-file-word-o"});
-        fileTypeMap.put("docx", new String[]{"blue", "fa-file-word-o"});
-        fileTypeMap.put("docm", new String[]{"blue", "fa-file-word-o"});
-        fileTypeMap.put("dot", new String[]{"blue", "fa-file-word-o"});
-        fileTypeMap.put("dotm", new String[]{"blue", "fa-file-word-o"});
-        fileTypeMap.put("dotx", new String[]{"blue", "fa-file-word-o"});
-        fileTypeMap.put("odt", new String[]{"blue", "fa-file-word-o"});
-        fileTypeMap.put("rtf", new String[]{"blue", "fa-file-word-o"});
-        fileTypeMap.put("wps", new String[]{"blue", "fa-file-word-o"});
-        fileTypeMap.put("gz", new String[]{"gray", "fa-file-zip-o"});
-        fileTypeMap.put("zip", new String[]{"gray", "fa-file-zip-o"});
-        fileTypeMap.put("7z", new String[]{"gray", "fa-file-zip-o"});
-        fileTypeMap.put("jpg", new String[]{"red", "fa-file-image-o"});
-        fileTypeMap.put("jpeg", new String[]{"red", "fa-file-image-o"});
-        fileTypeMap.put("gif", new String[]{"red", "fa-file-image-o"});
-        fileTypeMap.put("png", new String[]{"red", "fa-file-image-o"});
-        fileTypeMap.put("bmp", new String[]{"red", "fa-file-image-o"});
-        fileTypeMap.put("tiff", new String[]{"red", "fa-file-image-o"});
-        fileTypeMap.put("svg", new String[]{"red", "fa-file-image-o"});
-        fileTypeMap.put("txt", new String[]{"blue", "fa-file-text"});
-        fileTypeMap.put("mkv", new String[]{"black", "fa-file-movie-o"});
-        fileTypeMap.put("flv", new String[]{"black", "fa-file-movie-o"});
-        fileTypeMap.put("ogg", new String[]{"black", "fa-file-movie-o"});
-        fileTypeMap.put("mp4", new String[]{"black", "fa-file-movie-o"});
-        fileTypeMap.put("ogv", new String[]{"black", "fa-file-movie-o"});
-        fileTypeMap.put("avi", new String[]{"black", "fa-file-movie-o"});
-        fileTypeMap.put("mov", new String[]{"black", "fa-file-movie-o"});
-        fileTypeMap.put("wmv", new String[]{"black", "fa-file-movie-o"});
-        fileTypeMap.put("mpg", new String[]{"black", "fa-file-movie-o"});
-        fileTypeMap.put("mpeg", new String[]{"black", "fa-file-movie-o"});
-        fileTypeMap.put("ppa", new String[]{"red", "fa-file-powerpoint-o"});
-        fileTypeMap.put("ppam", new String[]{"red", "fa-file-powerpoint-o"});
-        fileTypeMap.put("pps", new String[]{"red", "fa-file-powerpoint-o"});
-        fileTypeMap.put("ppsm", new String[]{"red", "fa-file-powerpoint-o"});
-        fileTypeMap.put("ppsx", new String[]{"red", "fa-file-powerpoint-o"});
-        fileTypeMap.put("ppt", new String[]{"red", "fa-file-powerpoint-o"});
-        fileTypeMap.put("pptx", new String[]{"red", "fa-file-powerpoint-o"});
-        fileTypeMap.put("pptm", new String[]{"red", "fa-file-powerpoint-o"});
-        fileTypeMap = Collections.unmodifiableMap(fileTypeMap);
+    
+    
+    
+    
+    /**
+     * This method accepts a file and stores it to the file system
+     * @param request the request object
+     * @param response the response object
+     * @return the newly created node object
+     * @throws java.io.IOException
+     * @throws java.text.ParseException
+     */
+    @RequestMapping(value = "/uploadFile.html")
+    public @ResponseBody Node uploadFile(HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException {   
+        String urlOfFolderToUploadTo = Helpful.getRequestParamStrSafe("path", request);
+        User user = (User) Helpful.getUser(request);
+        MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
+        userHomeDirectory = new File(driveHome.getAbsolutePath(), user.getIdUser().toString());
+        context = Helpful.getProperty(request, "jdbc.properties", "context");
+        String pathOfFolderToUploadTo = userHomeDirectory + File.separator + convertPath(urlOfFolderToUploadTo, context);
+
+ 
+        // get html files from request
+        Map<String, MultipartFile> filesMap = getFiles(multipartRequest);
+        
+        
+        // save file to folder
+        File uploadedFile = null;
+        try {
+            uploadedFile = uploadFilesToFolder.uploadFilesToFolder(pathOfFolderToUploadTo, filesMap);
+        } catch (IOException ex) {
+            Logger.getLogger(FileBrowserController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        if (uploadedFile != null && uploadedFile.exists()) {
+            Node newNode = createNode(uploadedFile, null);
+            return newNode;
+        } else {
+            return null;
+        }
     }
+    
+    
     
     
     /**
@@ -131,6 +127,7 @@ public class FileBrowserController {
      * @param request the request object
      * @param response the response object
      * @return the Model And View object
+     * @throws java.io.IOException
      */
     @RequestMapping(value = "/getFolders.htm")
     public @ResponseBody Map<String, List<String[]>> getFolders(HttpServletRequest request, HttpServletResponse response) throws IOException{
@@ -163,6 +160,7 @@ public class FileBrowserController {
      * @param request the request object
      * @param response the response object
      * @return the Model And View object
+     * @throws java.io.IOException
      */
     @RequestMapping(value = "/diveIntoFolder.htm")
     public @ResponseBody List<String[]> diveIntoFolder(HttpServletRequest request, HttpServletResponse response) throws IOException{
@@ -187,6 +185,7 @@ public class FileBrowserController {
      * @param request the request object
      * @param response the response object
      * @return the Model And View object
+     * @throws java.io.IOException
      */
     @RequestMapping(value = "/goBack.htm")
     public @ResponseBody Map<String, List<String[]>> goBack(HttpServletRequest request, HttpServletResponse response) throws IOException{
@@ -248,6 +247,37 @@ public class FileBrowserController {
     
     
     /**
+     * This method creates a new folder under the 
+     * user's currently displayed directory
+     * @param request the request object
+     * @param response the response object
+     * @return the newly created node
+     * @throws java.io.IOException
+     * @throws java.text.ParseException
+     */
+    @RequestMapping(value = "/createNewFolder.html")
+    public @ResponseBody Node createNewFolder(HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{       
+        String path = Helpful.getRequestParamStrSafe("path", request);
+        String newFolderName = Helpful.getRequestParamStrSafe("newFolderName", request);
+        driveHome = new File(Helpful.getProperty(request, "jdbc.properties", "drive.home"));
+        User user = (User) Helpful.getUser(request);
+        userHomeDirectory = new File(driveHome.getAbsolutePath(), user.getIdUser().toString());
+        context = Helpful.getProperty(request, "jdbc.properties", "context");
+        String currentFolderLocation = userHomeDirectory + File.separator + convertPath(path, context);
+        
+        
+        File newlyCreatedFolder = createFileInFolder.createFileInFolder(currentFolderLocation, newFolderName);
+        if (!newlyCreatedFolder.exists()) {
+           return null;            
+        } else {
+            Node newNode = createNode(newlyCreatedFolder, null);
+            return newNode;
+        }
+    }
+    
+    
+    
+    /**
      * This method deletes a file or folder
      * @param request the request object
      * @param response the response object
@@ -268,6 +298,107 @@ public class FileBrowserController {
     }
     
     
+    /**
+     * This method stores the parent queue, current node
+     * and path of file to move in state before forwarding 
+     * control to the move page for the user to select a folder
+     * to move the file to
+     * @param request the request object
+     */
+    @RequestMapping(value = "/selectMoveDir.html")
+    public void selectMoveDir(HttpServletRequest request, HttpServletResponse response){       
+        String path = Helpful.getRequestParamStrSafe("path", request);
+        String nodeMover = Helpful.getRequestParamStrSafe("nodeMover", request);
+        Helpful.setObjInSession(request, "pathOfObjectToMove", path);
+        Helpful.setObjInSession(request, "nodeMover", nodeMover);
+    }
+    
+    
+    
+    
+    /**
+     * This method stores the parent queue, current node
+     * and path of file to move in state before forwarding 
+     * control to the move page for the user to select a folder
+     * to move the file to
+     * @param request the request object
+     */
+    @RequestMapping(value = "/moveFileToFolder.html")
+    public String moveFileToFolder(HttpServletRequest request, HttpServletResponse response) throws IOException{  
+        String urlOfFileToMove = (String) Helpful.getObjFromSession(request, "pathOfObjectToMove");
+        String urlOffolderToMoveTo = Helpful.getRequestParamStrSafe("folderToMoveTo", request);
+        driveHome = new File(Helpful.getProperty(request, "jdbc.properties", "drive.home"));
+        User user = (User) Helpful.getObjFromSession(request, "user");
+        Helpful.removeObjFromSession(request, "pathOfObjectToMove");
+        
+        // convert download url's of files to absolute path of files on disk
+        userHomeDirectory = new File(driveHome.getAbsolutePath(), user.getIdUser().toString());
+        context = Helpful.getProperty(request, "jdbc.properties", "context");
+        String pathOfFolderToMoveTo = userHomeDirectory + File.separator + convertPath(urlOffolderToMoveTo, context);
+        String pathOfFileToMove = userHomeDirectory + File.separator + convertPath(urlOfFileToMove, context);
+        
+        // move file
+        boolean isMoved = moveFileOrFolder.moveFileOrFolder(pathOfFolderToMoveTo, pathOfFileToMove);
+        
+        return "redirect:getDirs.html";
+    }    
+    
+    
+    
+    
+    /**
+     * This method displays the move page
+     * @param request the request object
+     */
+    @RequestMapping(value = "/displayMove.html")
+    public String displayMove(HttpServletRequest request){       
+        return "move";
+    }
+    
+    
+    
+    /**
+     * This method retrieves the node mover object from state
+     * and sends it asynchronously to the move page
+     * @param request the request object
+     */
+    @RequestMapping(value = "/getNodeMover.html")
+    public @ResponseBody String getNodeMover(HttpServletRequest request) {       
+        String nodeMover = (String) Helpful.getObjFromSession(request, "nodeMover");
+
+        return nodeMover;
+    }
+    
+    
+    
+    /**
+     * This method retrieves the node mover object from state
+     * to return to the calling function and also deletes it from state
+     * and sends it asynchronously to the move page
+     * @param request the request object
+     */
+    @RequestMapping(value = "/returnNodeMover.html")
+    public @ResponseBody String returnNodeMover(HttpServletRequest request) {       
+        String nodeMover = (String) Helpful.getObjFromSession(request, "nodeMover");
+        Helpful.removeObjFromSession(request, "nodeMover");
+        return nodeMover;
+    }
+    
+    
+    
+    /**
+     * This method returns a user to their directory
+     * listing after canceling or moving a file or folder
+     * @param request the request object
+     * @param response the response object
+     * @return the Model And View object
+     */
+    @RequestMapping(value = "/displayDirs.html")
+    public ModelAndView displayDirs(HttpServletRequest request, HttpServletResponse response){       
+        return new ModelAndView("dirsFromMove");
+    }
+    
+    
     
     /**
      * This method creates a shareable version of a file and returns
@@ -276,6 +407,7 @@ public class FileBrowserController {
      * @param response the response object
      * @return the shareable link
      * @throws java.io.IOException
+     * @throws com.homeclouddrive.exception.BaseException
      */
     @RequestMapping(value = "/shareFile.html")
     public @ResponseBody JsonReturnObj shareFile(HttpServletRequest request, HttpServletResponse response) throws IOException, BaseException{       
@@ -322,12 +454,14 @@ public class FileBrowserController {
     
     
     
+    
     /**
      * Get the user's entire folder structure
      * @param request the request object
      * @param response the response object
      * @return the Model And View object
      * @throws java.io.IOException
+     * @throws java.text.ParseException
      */
     @RequestMapping(value = "/getDirs.html")
     public ModelAndView getDirs(HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{       
@@ -335,6 +469,7 @@ public class FileBrowserController {
         context = Helpful.getProperty(request, "jdbc.properties", "context");
         User user = (User) Helpful.getUser(request);
         userHomeDirectory = new File(driveHome.getAbsolutePath(), user.getIdUser().toString());
+        fileTypeMap = getFileTypeMap();
         
         StopWatch watch = new StopWatch();
         watch.start();
@@ -356,6 +491,7 @@ public class FileBrowserController {
      * @param response the response object
      * @return the Model And View object
      * @throws java.io.IOException
+     * @throws java.text.ParseException
      */
     @RequestMapping(value = "/getDirsJson.html")
     public @ResponseBody List getDirsJson(HttpServletRequest request, HttpServletResponse response) throws IOException, ParseException{       
@@ -365,6 +501,7 @@ public class FileBrowserController {
         userHomeDirectory = new File(driveHome.getAbsolutePath(), user.getIdUser().toString());
         List list = new ArrayList();
         flatList = new ArrayList();
+        fileTypeMap = getFileTypeMap();
         
         StopWatch watch = new StopWatch();
         watch.start();
@@ -388,6 +525,8 @@ public class FileBrowserController {
      * a node in the tree
      * @param files a list of files within a given node
      * @param parentNode the node that the files sit inside of
+     * @throws java.io.IOException
+     * @throws java.text.ParseException
      */
     protected void createTree(File[] files, Node parentNode) throws IOException, ParseException{ // the first file sent to this method should be the home directory
         for(File file : files){
@@ -531,6 +670,91 @@ public class FileBrowserController {
      */
     protected String convertPath(String path, String context){
         return path.replace(context, "").replace("/resource/", "").replace("/", "\\");
+    }
+    
+    
+    private Map<String, String[]> getFileTypeMap(){
+        Map<String, String[]> fileTypeMap = new HashMap();
+ 
+        fileTypeMap.put("other", new String[]{"blue", "fa-file"});
+        fileTypeMap.put("xlsx", new String[]{"green", "fa-file-excel-o"});
+        fileTypeMap.put("xlsm", new String[]{"green", "fa-file-excel-o"});
+        fileTypeMap.put("xlsb", new String[]{"green", "fa-file-excel-o"});
+        fileTypeMap.put("xltx", new String[]{"green", "fa-file-excel-o"});
+        fileTypeMap.put("xltm", new String[]{"green", "fa-file-excel-o"});
+        fileTypeMap.put("xls", new String[]{"green", "fa-file-excel-o"});
+        fileTypeMap.put("xlt", new String[]{"green", "fa-file-excel-o"});
+        fileTypeMap.put("xla", new String[]{"green", "fa-file-excel-o"});
+        fileTypeMap.put("xlw", new String[]{"green", "fa-file-excel-o"});
+        fileTypeMap.put("pdf", new String[]{"red", "fa-file-pdf-o"});
+        fileTypeMap.put("mp3", new String[]{"red", "fa-file-sound-o"});
+        fileTypeMap.put("wav", new String[]{"red", "fa-file-sound-o"});
+        fileTypeMap.put("aaf", new String[]{"red", "fa-file-sound-o"});
+        fileTypeMap.put("aiff", new String[]{"red", "fa-file-sound-o"});
+        fileTypeMap.put("flac", new String[]{"red", "fa-file-sound-o"});
+        fileTypeMap.put("wma", new String[]{"red", "fa-file-sound-o"});
+        fileTypeMap.put("m4a", new String[]{"red", "fa-file-sound-o"});
+        fileTypeMap.put("m4p", new String[]{"red", "fa-file-sound-o"});
+        fileTypeMap.put("m4b", new String[]{"red", "fa-file-sound-o"});
+        fileTypeMap.put("m4c", new String[]{"red", "fa-file-sound-o"});
+        fileTypeMap.put("raw", new String[]{"red", "fa-file-sound-o"});
+        fileTypeMap.put("doc", new String[]{"blue", "fa-file-word-o"});
+        fileTypeMap.put("docx", new String[]{"blue", "fa-file-word-o"});
+        fileTypeMap.put("docm", new String[]{"blue", "fa-file-word-o"});
+        fileTypeMap.put("dot", new String[]{"blue", "fa-file-word-o"});
+        fileTypeMap.put("dotm", new String[]{"blue", "fa-file-word-o"});
+        fileTypeMap.put("dotx", new String[]{"blue", "fa-file-word-o"});
+        fileTypeMap.put("odt", new String[]{"blue", "fa-file-word-o"});
+        fileTypeMap.put("rtf", new String[]{"blue", "fa-file-word-o"});
+        fileTypeMap.put("wps", new String[]{"blue", "fa-file-word-o"});
+        fileTypeMap.put("gz", new String[]{"gray", "fa-file-zip-o"});
+        fileTypeMap.put("zip", new String[]{"gray", "fa-file-zip-o"});
+        fileTypeMap.put("7z", new String[]{"gray", "fa-file-zip-o"});
+        fileTypeMap.put("jpg", new String[]{"red", "fa-file-image-o"});
+        fileTypeMap.put("jpeg", new String[]{"red", "fa-file-image-o"});
+        fileTypeMap.put("gif", new String[]{"red", "fa-file-image-o"});
+        fileTypeMap.put("png", new String[]{"red", "fa-file-image-o"});
+        fileTypeMap.put("bmp", new String[]{"red", "fa-file-image-o"});
+        fileTypeMap.put("tiff", new String[]{"red", "fa-file-image-o"});
+        fileTypeMap.put("svg", new String[]{"red", "fa-file-image-o"});
+        fileTypeMap.put("txt", new String[]{"blue", "fa-file-text"});
+        fileTypeMap.put("mkv", new String[]{"black", "fa-file-movie-o"});
+        fileTypeMap.put("flv", new String[]{"black", "fa-file-movie-o"});
+        fileTypeMap.put("ogg", new String[]{"black", "fa-file-movie-o"});
+        fileTypeMap.put("mp4", new String[]{"black", "fa-file-movie-o"});
+        fileTypeMap.put("ogv", new String[]{"black", "fa-file-movie-o"});
+        fileTypeMap.put("avi", new String[]{"black", "fa-file-movie-o"});
+        fileTypeMap.put("mov", new String[]{"black", "fa-file-movie-o"});
+        fileTypeMap.put("wmv", new String[]{"black", "fa-file-movie-o"});
+        fileTypeMap.put("mpg", new String[]{"black", "fa-file-movie-o"});
+        fileTypeMap.put("mpeg", new String[]{"black", "fa-file-movie-o"});
+        fileTypeMap.put("ppa", new String[]{"red", "fa-file-powerpoint-o"});
+        fileTypeMap.put("ppam", new String[]{"red", "fa-file-powerpoint-o"});
+        fileTypeMap.put("pps", new String[]{"red", "fa-file-powerpoint-o"});
+        fileTypeMap.put("ppsm", new String[]{"red", "fa-file-powerpoint-o"});
+        fileTypeMap.put("ppsx", new String[]{"red", "fa-file-powerpoint-o"});
+        fileTypeMap.put("ppt", new String[]{"red", "fa-file-powerpoint-o"});
+        fileTypeMap.put("pptx", new String[]{"red", "fa-file-powerpoint-o"});
+        fileTypeMap.put("pptm", new String[]{"red", "fa-file-powerpoint-o"});
+        
+        return fileTypeMap;
+    }
+    
+    
+    
+    private Map<String, MultipartFile> getFiles(MultipartHttpServletRequest multipartRequest){
+        // get the names of the files in the multipart request
+        Iterator<String> it = multipartRequest.getFileNames();
+        Map<String, MultipartFile> filesMap = new HashMap();
+        List<Object[]> files = new ArrayList<Object[]>();
+
+        // get all files
+        while (it.hasNext()) {
+            MultipartFile multipartFile = multipartRequest.getFile(it.next());
+            filesMap.put(multipartFile.getOriginalFilename(), multipartFile);
+        }
+        
+        return filesMap;
     }
     
 }

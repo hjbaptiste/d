@@ -15,11 +15,16 @@ function display() {
 
 
 function displayNoSwitch() {
-    if (displayFormat == 'block') {
-        displayFiles();
-    } else {
+    if(currentNode.isSearch){
         displayFilesInListForm();
+    } else {
+        if (displayFormat == 'block') {
+            displayFiles();
+        } else {
+            displayFilesInListForm();
+        }
     }
+    
 }
 
 

@@ -9,7 +9,9 @@ function goUp() {
             currentNode = parentQueue.pop();
             var parentNode = parentQueue.pop();
             parentQueue.push(parentNode);
-            //changeHeaderBackFromSearch();
+            if(!currentNode.isSearch){
+                changeHeaderBackFromSearch();
+            }            
         }
 
         displayNoSwitch();

@@ -1,8 +1,14 @@
+<%@page import="com.homeclouddrive.domain.Node"%>
 <%@page import="com.homeclouddrive.domain.User"%>
 <%@page import="com.homeclouddrive.domain.Role"%>
 <%@page import="com.jigy.api.Helpful"%>
 <!DOCTYPE html>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
+
+<% 
+String path = request.getRequestURL().toString();
+boolean isMove = path == null ? false : path.endsWith("move.jsp");
+%>
 
 <!-- start wave libraries -->
 <jsp:include page="header_css_waves.jsp"></jsp:include>
@@ -163,6 +169,7 @@
 
 <div class="gallery-fix"></div> <!-- Important for all pages that have galleries or portfolios -->
 <!-- begin top bar -->
+<% if(!isMove){ %>
 <div id="header-fixed" class="header-style-1">
     <a class="header-1 open-left-sidebar" href="#"><i class="fa fa-navicon fa-lg flat-icon"></i></a>
     <a class="header-3" href="javascript: changeToSearchHeader()" style="position: absolute; top: 6px; right: 95px"><i id="search" class="fa fa-search fa-lg flat-icon"></i></a>
@@ -174,23 +181,45 @@
     <a class="header-2" href="<%= Helpful.getProperty(request, "jdbc.properties", "context") %>/displayLogin.html"><i class="fa fa-user fa-lg flat-icon"></i></a>
         <% } %>
 </div>
-<div id="header-fixed_dir" class="header-style-1" style="display: none">
+<div id="header-fixed_dir" class="header-style-1" style="display: none; border-top: none; top: 0px;">
     <a class="header-1" href="javascript: goUp()"><i class="fa fa-arrow-circle-left fa-2x flat-icon"></i></a>
-    <a class="header-3" href="javascript: changeToSearchHeader()" style="position: absolute; top: 6px; right: 95px"><i id="search" class="fa fa-search fa-lg flat-icon"></i></a>
-    <a class="header-4" href="javascript: display(); changeOrderIcon();" style="position: absolute; top: 7px; right: 55px"><i id="listOrder" class="fa fa-list fa-lg flat-icon reorder"></i></a>
+    <a class="header-3" href="javascript: changeToSearchHeader()" style="position: absolute; top: 7px; right: 95px"><i id="search" class="fa fa-search fa-lg flat-icon"></i></a>
+    <a class="header-4" href="javascript: display(); changeOrderIcon();" style="position: absolute; top: 8px; right: 55px"><i id="listOrder" class="fa fa-list fa-lg flat-icon reorder"></i></a>
     <h4 id="currentFolder" class="header-logo" style="margin-left: -120px; margin-top: 20px; color: rgba(0,0,0,.6)">Home Cloud Drive</h4>
         <% if (Helpful.isUserLoggedIn(request)) { %>
-    <a class="header-2" href="signOut.html"><i class="fa fa-user flat-icon"></i></a>
+    <a class="header-2" href="signOut.html"><i class="fa fa-user fa-lg flat-icon" style="position: relative; top: 1px"></i></a>
         <% } else { %>
-    <a class="header-2" href="<%= Helpful.getProperty(request, "jdbc.properties", "context") %>/displayLogin.html"><i class="fa fa-user flat-icon"></i></a>
+    <a class="header-2" href="<%= Helpful.getProperty(request, "jdbc.properties", "context") %>/displayLogin.html"><i class="fa fa-user fa-lg flat-icon" style="position: relative; top: 1px"></i></a>
         <% } %>
 </div>
-<div id="header-fixed_search" class="header-style-1" style="display: none">
+<div id="header-fixed_search" class="header-style-1" style="display: none; border-top: none; top: 0px;">
     <a class="header-1" href="javascript: goUp()"><i class="fa fa-arrow-circle-left fa-2x flat-icon"></i></a>
     <div id="searchBar" class="header-logo" style="margin-left: -120px; margin-top: 20px;">
         <input id="searchInput" type="text" maxlength="32" width="40" onkeyup="isEnterKeyPressed(event, search)" style="border: none; font-size: 16px;" />
     </div>
 </div>
+<% } else { %>
+<div class="col-xs-12" style="height: 80px; padding-bottom:0px; margin-bottom: 0px; border-bottom: solid 1px rgba(0,0,0,.1)">
+    <div class="col-xs-2" style="position: relative; top: 20px">
+        <a id="goUpMoveBtn" class="header-1" href="javascript: goUpMove()"><i class="fa fa-arrow-circle-left fa-2x" style="text-align: left; line-height: 40px; color: rgba(0,0,0,.6)"></i></a>
+    </div>
+    <div class="col-xs-8" style="text-align: left; line-height: 40px; color: rgba(0,0,0,.6)">
+        <div class="col-xs-12" style="position: relative; top: 8px; padding:0px; margin: 0px;">
+            Select destination folder
+        </div>
+        <div id="moveHeaderName" class="col-xs-12" style="position: relative; top: -8px; padding:0px; margin: 0px; font-weight: 800; font-size: 20px">
+            
+        </div>
+    </div>
+    <div class="col-xs-2" style="position: relative; top: 20px">
+        <i class="fa fa-folder fa-2x" style="text-align: left; line-height: 40px; color: rgba(0,0,0,.6)"></i>
+    </div>
+</div>
+<div class="col-xs-12" style="padding-bottom:0px; margin-bottom: 0px; height: 35px; line-height: 35px; border-bottom: solid 1px gray">
+    Folders
+</div>
+
+<% } %>
 <!-- end top bar -->
 
 

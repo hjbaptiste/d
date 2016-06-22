@@ -658,6 +658,27 @@ body.has-active-menu {
     -moz-box-shadow: none;
     box-shadow: none;
 }
+.btn-circle.btn-xl {
+  width: 70px;
+  height: 70px;
+  padding: 10px 16px;
+  font-size: 24px;
+  line-height: 1.33;
+  border-radius: 35px;
+}
+.fileUpload input.upload { 
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 0;
+    padding: 0;
+    font-size: 20px;
+    cursor: pointer;
+    opacity: 0;
+    filter: alpha(opacity=0);
+    height: 0px;
+    width: 0px;
+}
     </style>
 </head>
 
@@ -672,7 +693,7 @@ body.has-active-menu {
             <div id="fill-content" class="fill-content">
                 <div class="header-clear-large"></div>
                 <!--Page content goes here, fixed elements go above the all elements class-->
-                <div id="error"></div>
+                <div id="error" style="position: fixed; top: 47px; left: 0; right: 0; display: none; z-index: 999999;"></div>
                 <div id="deviceDeletedInfo" style="display:none; z-index: 3000">
                     <strong id="STRONG_2"> Item Deleted </strong>
                 </div>
@@ -691,7 +712,7 @@ body.has-active-menu {
                 %>    
                     <div class="col-xs-6" style="padding-left:3px; padding-right:3px; padding-bottom:5px; margin-bottom: 0px">
                         <div class="btn-group col-xs-12" style="margin:0px; padding: 0px;">
-                          <button type="button" onclick="goIn('<%= idAnchor %>')" class="btn btn-primary col-xs-9" style="height: 42px; text-align: left">
+                          <button type="button" onclick="goIn('<%= idAnchor %>')" class="btn btn-primary col-xs-9 folder-button" style="height: 42px; text-align: left">
                               <i class="fa fa-folder" style="float: left; position: relative; top: 3px; padding-right: 15px"></i>
                               <span id="<%= idAnchor + "_name" %>"><%= BaseController.paraphrase(dirNode.getName()) %></span>
                           </button>
@@ -718,7 +739,7 @@ body.has-active-menu {
                 %>
                     <div class="col-xs-6" style="padding-left:3px; padding-right:3px; padding-bottom:5px; margin-bottom: 0px">
                         <div class="btn-group col-xs-12" style="margin:0px; padding: 0px;">
-                          <button type="button" onclick="getEI('<%= idAnchor %>').click();" class="btn btn-primary col-xs-9" style="height: 42px; text-align: left; border-color: rgba(0,0,0,.1); background-color: rgba(0,0,0,.2)">
+                          <button type="button" onclick="getEI('<%= idAnchor %>').click();" class="btn btn-primary col-xs-9 folder-button" style="height: 42px; text-align: left; border-color: rgba(0,0,0,.1); background-color: rgba(0,0,0,.2)">
                               <i class="<%= "fa " + fileNode.getExtensionIcon()[1] %>" style="color: <%= fileNode.getExtensionIcon()[0] %>; float: left; position: relative; top: 3px; padding-right: 15px"></i>
                               <span id="<%= idAnchor + "_name" %>"><%= BaseController.paraphrase(fileNode.getName()) %></span>
                           </button>
@@ -734,11 +755,15 @@ body.has-active-menu {
                     }
                 %>               
             </div>
-
+            
             <div class="decoration hide-if-responsive"></div>
             <input id="activeElem" type="hidden" value="devicesMenuItem">
             <div class="modal2"></div>
         </div>
+            <button id="addIconBtn" onclick="openAddMenu(event)" type="button" class="btn btn-default btn-circle btn-xl" style="outline: none; position: fixed; bottom: 20px; right: 20px; background-color: rgb(66,133,244)"><i class="fa fa-plus" style="color: white"></i></button>
+            <input id="fileUpload" onchange="uploadFile(this.id)" class="fileUpload" type="file" style="visibility: hidden; display: none" />
+            <!--img src="img/addIcon.png" id="addIconBtn" style="position: fixed; bottom: 20px; right: 20px; height: 70px; width: 70px;" /-->
+            <!--img src="img/addIcon.jpg" style="position: fixed; bottom: 20px; right: 20px; height: 80px; width: 80px;" /-->
             
            
         
@@ -799,12 +824,41 @@ body.has-active-menu {
         <!-- end slide up menu -->
         
         
+        
+        <!-- add button html -->
+        <div id="addBtnHtml" style="display: none">
+            <button id="c-menu__closeBtn" class="c-menu__close"></button>
+            <div class="row">
+                <div class="col-xs-12" style="height: 40px; border-bottom: solid 1px rgba(0,0,0,.5)">
+                    <div class="col-xs-2">
+                        New
+                    </div>
+                    <div class="col-xs-10" style="text-align: left; font-weight: 600; color: rgba(0,0,0,.6)"></div>
+                </div>
+                <div id="addMenuCreateFolderOrUpload" class="col-xs-12" style="padding-top: 30px; height: 160px; border-bottom: solid 1px rgba(0,0,0,.1)">
+                    <a href="javascript: openNameFolderModal()">
+                        <div class="col-xs-6" style="padding-left: 25px; padding-right: 0px; margin-right: 0px; text-align: center; font-weight: 500; line-height: 40px; color: rgba(0,0,0,.6)">
+                            <i class="fa fa-folder fa-5x" style="text-align: center;"></i><br>Folder 
+                        </div>
+                    </a>                    
+                    <a href="javascript: getEI('fileUpload').click()">
+                        <div class="col-xs-6" style="text-align: center; padding-left: 0px; margin-left: 0px; text-align: center; line-height: 40px; color: rgba(0,0,0,.6)">
+                            <i class="fa fa-upload fa-5x"></i><br>Upload
+                        </div>
+                    </a>                    
+                </div>
+            </div>
+        </div>
+        <!-- end add button html -->
+        
+        
         <!-- end body -->
 
 
         <script>
-            Waves.attach('.folder-btn', '.fa-ellipsis-v', ['waves-float']);
+            Waves.attach('.fa-ellipsis-v', ['waves-float']);
             Waves.attach('.menuItem', ['waves-block']);
+            Waves.attach('#addIconBtn', ['waves-circle', 'waves-float']);
         </script>
         <!-- start footer -->
         <jsp:include page="footer.jsp"></jsp:include>    
@@ -832,6 +886,30 @@ body.has-active-menu {
             </div>
         </div>
         <!-- end rename modal -->
+        
+        
+        <!-- name new folder modal -->
+        <button id="nameFolderModalButton" type="button" style="height: 0px; width: 0px" data-toggle="modal" data-target="#nameFolderModal"></button>
+        <div class="modal fade" id="nameFolderModal" role="dialog">
+            <div class="modal-dialog modal-sm">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button id="nameFolderCloseBtn" type="button" class="close" data-dismiss="modal">&times;</button>
+                        <h4 class="modal-title">Name Folder</h4>
+                    </div>
+                    <div class="modal-body">
+                        <input id="nameFolderField" type="text" onkeyup="isEnterKeyPressed(event, createFolder)" maxlength="40" value="" style="font-size: 25px; width: 80%" />
+                    </div>
+                    <div class="modal-footer">
+                        <button id="nameFolderSubmitBtn" onclick="createFolder()" type="button" class="btn btn-info btn-large" data-dismiss="modal">Submit</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <!-- end name new folder modal -->
         
         
         <!-- copy shareable link modal -->

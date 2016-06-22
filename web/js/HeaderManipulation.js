@@ -37,6 +37,7 @@ function changeHeaderBackFromSearch() {
 
     getEI('searchInput').value = '';
     displayFormat = formatBeforeSearch;
+    isSearch = false;
 }
 
 

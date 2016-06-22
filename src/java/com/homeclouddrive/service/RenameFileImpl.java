@@ -1,18 +1,10 @@
 
 package com.homeclouddrive.service;
 
-import com.homeclouddrive.dao.UserDAOImpl;
-import com.homeclouddrive.domain.Role;
-import com.homeclouddrive.domain.User;
-import com.homeclouddrive.exception.BaseException;
 import java.io.File;
 import java.io.IOException;
-import java.util.Date;
-import javax.annotation.Resource;
 import org.apache.commons.io.FileUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 
 /**

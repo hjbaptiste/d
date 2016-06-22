@@ -1,4 +1,4 @@
-function Node() {
+function SearchNode() {
     var name;
     var isDirectory = true;
     var isFile = false;
@@ -9,16 +9,19 @@ function Node() {
     var numDirectories;
 }
 
-
+var isSearch = false;
 function search() {
-    var searchTerm = new String(getEIV('searchInput')).trim();
+    var searchTerm = new String(getEIV('searchInput')).trim();    
     
     if (searchTerm.length > 0) {
         var results = fuseSearcher.search(searchTerm);
         filterSearchResults(results, searchTerm);
     }
-    formatBeforeSearch = displayFormat;
-    displayFormat = 'list';
+    if(!isSearch){
+        formatBeforeSearch = displayFormat;
+        displayFormat = 'list';
+        isSearch = true;
+    }
 }
 
 
@@ -59,12 +62,13 @@ function manageParentQueue(searchNode){
 
 
 function createSearchNode(filteredDirectoryResults, filteredFileResults, searchTerm) {
-    var searchNode = new Node;
+    var searchNode = new SearchNode;
     searchNode.name = searchTerm;
     searchNode.fileChildren = filteredFileResults;
     searchNode.directoryChildren = filteredDirectoryResults;
     searchNode.numFiles = filteredFileResults.length;
     searchNode.numDirectories = filteredDirectoryResults.length;
+    searchNode.isSearch = true;
     
     return searchNode;
 }

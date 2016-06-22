@@ -32,7 +32,7 @@ public class UploadController extends BaseController {
      * @param request the request object
      * @param response the response object
      */
-    @RequestMapping(value = "/uploadFile.html", method = RequestMethod.POST)
+    @RequestMapping(value = "/uploadFiles.html", method = RequestMethod.POST)
     public void uploadFile(HttpServletRequest request, HttpServletResponse response) throws Exception {
         MultipartHttpServletRequest multipartRequest = (MultipartHttpServletRequest) request;
         MultipartFile multipartFile = multipartRequest.getFile("file");
